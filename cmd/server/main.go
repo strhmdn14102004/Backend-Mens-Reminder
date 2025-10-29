@@ -14,7 +14,9 @@ import (
 func main() {
 	cfg := config.Load()
 	d, err := db.Open(cfg.DatabaseURL)
-	if err != nil { log.Fatal(err) }
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// scheduler
 	s := &scheduler.Service{
@@ -24,7 +26,8 @@ func main() {
 	c := s.Start()
 	defer c.Stop()
 
-	h := httpserver.New(d, cfg.JWTSecret, cfg.BaseURL, cfg.TelegramToken)
+	h := httpserver.New(d, cfg.JWTSecret, cfg.BaseURL, cfg.TelegramToken, s)
+
 	log.Printf("listening on :%s", cfg.Port)
 	log.Fatal(http.ListenAndServe(":"+cfg.Port, h))
 }

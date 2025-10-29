@@ -20,13 +20,13 @@ func (s *Service) Start() *cron.Cron {
 	c := cron.New() // default: seconds disabled; minutes granularity cukup
 	// Jalan tiap hari jam 08:00 WIB (Railway UTC, offset manual bila perlu).
 	_, _ = c.AddFunc("0 0 1 * *", func() { // 01:00 UTC ~= 08:00 WIB
-		s.runDaily()
+		s.RunDaily()
 	})
 	c.Start()
 	return c
 }
 
-func (s *Service) runDaily() {
+func (s *Service) RunDaily() {
 	ctx := context.Background()
 	rows, err := s.DB.QueryContext(ctx, `
 		SELECT u.id, u.telegram_chat_id, c.last_period_start, c.cycle_length

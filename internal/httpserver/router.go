@@ -4,13 +4,15 @@ import (
 	"database/sql"
 	"net/http"
 
-	"github.com/julienschmidt/httprouter"
 	"backend_mens/internal/handlers"
 	"backend_mens/internal/middleware"
+	"backend_mens/internal/scheduler"
 	"backend_mens/internal/telegram"
+
+	"github.com/julienschmidt/httprouter"
 )
 
-func New(db *sql.DB, jwtSecret, baseURL, tgToken string) http.Handler {
+func New(db *sql.DB, jwtSecret, baseURL, tgToken string, s *scheduler.Service) http.Handler {
 	r := httprouter.New()
 
 	auth := &handlers.AuthHandler{DB: db, JWTSecret: jwtSecret}
@@ -21,6 +23,10 @@ func New(db *sql.DB, jwtSecret, baseURL, tgToken string) http.Handler {
 		BaseURL:   baseURL,
 		BotSender: &telegram.Bot{Token: tgToken},
 	}
+	r.GET("/test/reminder", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		s.RunDaily()
+		w.Write([]byte("ok"))
+	})
 
 	// Auth (public)
 	r.POST("/auth/send-otp", auth.SendOTP)
@@ -39,8 +45,8 @@ func New(db *sql.DB, jwtSecret, baseURL, tgToken string) http.Handler {
 	}
 
 	r.POST("/me/complete-profile", protected(auth.CompleteProfile))
-	r.POST("/me/telegram/link",    protected(tg.CreateLinkToken))
-	r.GET( "/me/summary",          protected(prof.GetSummary))
+	r.POST("/me/telegram/link", protected(tg.CreateLinkToken))
+	r.GET("/me/summary", protected(prof.GetSummary))
 
 	return r
 }
