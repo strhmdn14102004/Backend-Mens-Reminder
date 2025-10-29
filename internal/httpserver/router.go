@@ -27,6 +27,17 @@ func New(db *sql.DB, jwtSecret, baseURL, tgToken string, s *scheduler.Service) h
 		s.RunDaily()
 		w.Write([]byte("ok"))
 	})
+	// Test wellness manual
+	r.GET("/test/wellness", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		q := r.URL.Query().Get("period")
+		if q != "am" && q != "pm" {
+			w.WriteHeader(400)
+			w.Write([]byte("use ?period=am or ?period=pm"))
+			return
+		}
+		s.RunWellness(q)
+		w.Write([]byte("ok"))
+	})
 
 	// Auth (public)
 	r.POST("/auth/send-otp", auth.SendOTP)
